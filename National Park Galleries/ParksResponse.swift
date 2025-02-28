@@ -11,7 +11,11 @@ struct ParksResponse: Codable {
     let data: [Park]
 }
 
-struct Park: Codable, Identifiable {
+struct Park: Codable, Identifiable, Hashable, Equatable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
     let id: String
     let fullName: String
     let description: String
@@ -21,8 +25,21 @@ struct Park: Codable, Identifiable {
     let name: String
 }
 
-struct ParkImage: Codable {
+struct ParkImage: Codable, Identifiable, Equatable {
     let title: String
     let caption: String
     let url: String
+    var id: String {
+        url
+    }
+}
+
+
+extension Park{
+    static var mocked: Park {
+        let jsonUrl = Bundle.main.url(forResource: "park_mock", withExtension: "json")!
+        let data = try! Data(contentsOf: jsonUrl)
+        let park = try! JSONDecoder().decode(Park.self, from: data)
+        return park
+    }
 }
