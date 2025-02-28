@@ -12,25 +12,26 @@ struct ContentView: View {
     @State private var parks: [Park] = []
     
     var body: some View {
-        ScrollView {
+        NavigationStack{
+            ScrollView {
                 LazyVStack {
                     ForEach(parks) { park in
-                        Rectangle()
-                            .aspectRatio(4/3, contentMode: .fit)
+                        NavigationLink(value: park){
+                            ParkRow(park: park)
+                        }
                         
-                                .overlay(alignment: .bottomLeading) {
-                                    Text(park.name)
-                                        .font(.title)
-                                        .bold()
-                                        .foregroundStyle(.white)
-                                        .padding()
-                                }
-                                .cornerRadius(16)
-                                .padding(.horizontal)
+                        
                     }
                 }
             }
-        .padding()
+            .navigationDestination(for: Park.self){ park in
+                ParkDetailView(park: park)
+            }
+            .navigationTitle("National Parks")
+            .padding()
+            
+        }
+        
         .onAppear(perform: {
             
             Task {
@@ -40,8 +41,9 @@ struct ContentView: View {
     }
     
     
+    
     private func fetchParks() async {
-        let url = URL(string: "https://developer.nps.gov/api/v1/parks?stateCode=ca&api_key=B8N92518ub5MkqNeyMkciHlqSaSEZwuGgos95sA9")!
+        let url = URL(string: "https://developer.nps.gov/api/v1/parks?stateCode=wa&api_key=B8N92518ub5MkqNeyMkciHlqSaSEZwuGgos95sA9")!
         
         do{
             let (data, _) = try await URLSession.shared.data(from: url)
@@ -59,7 +61,38 @@ struct ContentView: View {
         
     }}
                   
+
+struct ParkRow: View {
+    var park: Park
+    var body: some View {
+        Rectangle()
+            .aspectRatio(4/3, contentMode: .fit)
+            .overlay{
+                let image = park.images.first
+                let imageUrlString = image?.url
+                let imageUrl = imageUrlString.flatMap { string in URL(string: string)
+                }
+                
+                AsyncImage(url: imageUrl) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Color(.systemGray4)
+                    }
+            }
         
+            .overlay(alignment: .bottomLeading) {
+                    Text(park.name)
+                        .font(.title)
+                        .bold()
+                        .foregroundStyle(.white)
+                        .padding()
+                }
+                .cornerRadius(16)
+                .padding(.horizontal)
+    }
+}
             
             
 #Preview {
